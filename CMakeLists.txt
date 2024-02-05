@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.25)
 
-project(sha256_comparison)
+project(sha256-comparison)
 
 find_package(benchmark REQUIRED)
-
+find_package(OpenSSL REQUIRED)
 
 set(src 
     "main.cpp"
@@ -16,4 +16,5 @@ set(headers
 
 add_executable(main ${src} ${headers})
 set_property(TARGET main PROPERTY CXX_STANDARD 17)
-target_link_libraries(main benchmark::benchmark benchmark::benchmark_main )
+target_link_libraries(main benchmark::benchmark benchmark::benchmark_main)
+target_link_libraries(main OpenSSL::SSL OpenSSL::Crypto)
