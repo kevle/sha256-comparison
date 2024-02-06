@@ -4,7 +4,11 @@
     "version": "0.0.0",
     "dependencies": [
         "benchmark",
-        "openssl"
+        "openssl",
+        {
+            "name": "nss",
+            "platform": "windows"
+        }
     ],
     "builtin-baseline": "ab231c2c666d2aa259a08e48e50dfeffb5c7fbe3"
 }

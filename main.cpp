@@ -8,10 +8,18 @@
 #include <vector>
 #include <memory>
 
+// zedwood
 #include "zedwood/sha256.h"
 
+// OpenSSL
 #include <openssl/evp.h>
 #include <openssl/sha.h>
+
+#ifdef USE_NSS
+// NSS
+#include <hasht.h>
+#include <nsslowhash.h>
+#endif
 
 // Round up
 static std::uint64_t div_up(std::uint64_t a, std::uint64_t b)
@@ -87,6 +95,7 @@ struct sha256_openssl
   std::unique_ptr<EVP_MD_CTX, openssl_evp_destroyer> ctx;
   sha256_openssl() : ctx(EVP_MD_CTX_create())
   {
+    assert(static_cast<bool>(ctx));
     const EVP_MD *md = EVP_MD_fetch(NULL, "SHA256", NULL);
     EVP_DigestInit_ex(ctx.get(), md, NULL);
   }
@@ -103,6 +112,52 @@ struct sha256_openssl
     return tmp;
   }
 };
+
+#ifdef USE_NSS
+struct nss_destroyer
+{
+  void operator()(NSSLOWInitContext *ctx) const
+  {
+    NSSLOW_Shutdown(ctx);
+  }
+  void operator()(NSSLOWHASHContext *ctx) const
+  {
+    NSSLOWHASH_Destroy(ctx);
+  }
+};
+
+struct sha256_libnss
+{
+  std::unique_ptr<NSSLOWInitContext, nss_destroyer> ictx;
+  std::unique_ptr<NSSLOWHASHContext, nss_destroyer> ctx;
+  sha256_libnss() : ictx(NSSLOW_Init()), //
+                    ctx(NSSLOWHASH_NewContext(ictx.get(), HASH_AlgSHA256))
+  {
+    assert(static_cast<bool>(ictx));
+    assert(static_cast<bool>(ctx));
+  }
+
+  void add_bytes(unsigned char *bytes, std::size_t num)
+  {
+    constexpr std::size_t max_bytes =
+        (std::numeric_limits<unsigned int>::max)();
+    unsigned int size = 0;
+    for (std::size_t i = 0; i < num; i += size, bytes += size)
+    {
+      size = static_cast<unsigned int>((std::min)(max_bytes, num - i));
+      NSSLOWHASH_Update(ctx.get(), bytes, size);
+    }
+  }
+  std::array<unsigned char, 32> digest()
+  {
+    std::array<unsigned char, 32> tmp;
+    unsigned int ret = 0;
+    NSSLOWHASH_End(ctx.get(), tmp.data(), &ret, 32);
+    assert(ret == 32);
+    return tmp;
+  }
+};
+#endif 
 
 template <typename sha256_wrapper>
 class data_fixture : public benchmark::Fixture
@@ -146,11 +201,15 @@ public:
                             int64_t(state.range(0)));                      \
   }                                                                        \
   BENCHMARK_REGISTER_F(data_fixture, BM_##SHA256_TYPE)                     \
-      ->Range(1LL << 8, 1LL << 30);
+      ->Range(1LL << 8, 1LL << 30)                                         \
+      ->Name(#SHA256_TYPE);
 
 // BENCHMARK_SHA256(sha256_dummy); // Do nothing
 BENCHMARK_SHA256(sha256_zedwood);
 BENCHMARK_SHA256(sha256_openssl_deprecated);
 BENCHMARK_SHA256(sha256_openssl);
+#ifdef USE_NSS
+BENCHMARK_SHA256(sha256_libnss);
+#endif
 
 BENCHMARK_MAIN();
