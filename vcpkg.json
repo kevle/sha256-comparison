@@ -5,6 +5,7 @@
     "dependencies": [
         "benchmark",
         "openssl",
+        "catch2",
         {
             "name": "nss",
             "platform": "windows"
