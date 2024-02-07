@@ -4,7 +4,7 @@
 
 #include <cstdint>
 
-TEMPLATE_TEST_CASE("Well-known values", "[sha256_well_known]", sha256_zedwood, sha256_openssl, sha256_openssl_deprecated
+TEMPLATE_TEST_CASE("Well-known values", "[sha256_well_known]", sha256_bitcoin, sha256_zedwood, sha256_openssl, sha256_openssl_deprecated
 #ifdef _WIN32
     , sha256_bcrypt
 #endif

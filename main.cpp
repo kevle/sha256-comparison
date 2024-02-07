@@ -5,6 +5,7 @@
 #include <array>
 #include <cstring>
 #include <random>
+#include <type_traits>
 
 template <typename sha256_wrapper>
 class data_fixture : public benchmark::Fixture {
@@ -14,6 +15,10 @@ public:
   using sha256_wrapper_t = sha256_wrapper;
 
   void SetUp(::benchmark::State &state) {
+    if constexpr(std::is_same_v<sha256_wrapper, sha256_bitcoin>)
+    {
+      SHA256AutoDetect(sha256_implementation::USE_ALL);
+    }
     // Fill data with reproducibly random bytes
     std::mt19937_64 gen;
     std::int64_t size = state.range(0);
@@ -48,6 +53,7 @@ public:
 
 // BENCHMARK_SHA256(sha256_dummy); // Do nothing
 BENCHMARK_SHA256(sha256_zedwood);
+BENCHMARK_SHA256(sha256_bitcoin);
 BENCHMARK_SHA256(sha256_openssl_deprecated);
 BENCHMARK_SHA256(sha256_openssl);
 #ifdef USE_NSS

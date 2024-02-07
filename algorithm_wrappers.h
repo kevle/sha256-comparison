@@ -9,6 +9,9 @@
 // zedwood
 #include "zedwood/sha256.h"
 
+// bitcoin
+#include "bitcoin/sha256.h"
+
 // OpenSSL
 #include <openssl/evp.h>
 #include <openssl/sha.h>
@@ -130,7 +133,6 @@ struct sha256_libnss {
 #endif
 
 #ifdef _WIN32
-
 struct bcrypt_alg_destroyer {
   void operator()(BCRYPT_ALG_HANDLE ctx) const {
     BCryptCloseAlgorithmProvider(ctx, 0);
@@ -180,3 +182,16 @@ struct sha256_bcrypt {
   }
 };
 #endif
+
+struct sha256_bitcoin {
+  CSHA256 ctx;
+
+  void add_bytes(unsigned char *bytes, std::size_t num) {
+    ctx.Write(bytes, num);
+  }
+  std::array<unsigned char, 32> digest() {
+    std::array<unsigned char, 32> tmp;
+    ctx.Finalize(tmp.data());
+    return tmp;
+  }
+};

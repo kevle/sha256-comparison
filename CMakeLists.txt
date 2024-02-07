@@ -12,16 +12,13 @@ find_package(Catch2 CONFIG REQUIRED)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(zedwood_src 
-    "zedwood/sha256.cpp"
-)
-set(zedwood_headers
-    "zedwood/sha256.h"
-)
-add_library(zedwood STATIC ${zedwood_src} ${zedwood_headers})
+add_compile_options(-mssse3 -msse4.1 -msse4.2 -mavx -mavx2 -msha)
+
+add_subdirectory(bitcoin)
+add_subdirectory(zedwood)
 
 add_library(all_algorithms INTERFACE)
-target_link_libraries(all_algorithms INTERFACE OpenSSL::SSL OpenSSL::Crypto zedwood)
+target_link_libraries(all_algorithms INTERFACE OpenSSL::SSL OpenSSL::Crypto bitcoin zedwood)
 # if(WIN32)
 #     target_link_libraries(main ${NSS_LIBRARIES})
 #     target_include_directories(main PUBLIC ${NSS_INCLUDE_DIRS})
