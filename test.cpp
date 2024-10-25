@@ -19,6 +19,7 @@
 
 TEMPLATE_TEST_CASE("Well-known values", "[sha256_well_known]", sha256_zedwood,
                    sha256_openssl,
+                   sha256_openssl_oneshot,
                    sha256_openssl_deprecated SHA256_BCRYPT SHA256_BITCOIN) {
   {
     TestType sha_obj;

@@ -99,6 +99,16 @@ struct sha256_openssl {
   }
 };
 
+struct sha256_openssl_oneshot {
+  std::array<unsigned char, 32> digest_data;
+  void add_bytes(const unsigned char *bytes, std::size_t num) {
+    SHA256(bytes, num, digest_data.data());
+  }
+  std::array<unsigned char, 32> digest() {
+    return digest_data;
+  }
+};
+
 #ifdef USE_NSS
 struct nss_destroyer {
   void operator()(NSSLOWInitContext *ctx) const { NSSLOW_Shutdown(ctx); }

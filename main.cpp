@@ -73,6 +73,7 @@ BENCHMARK_SHA256(sha256_zedwood);
 BENCHMARK_SHA256(sha256_bitcoin);
 #endif // BITCOIN_IMPL
 BENCHMARK_SHA256(sha256_openssl_deprecated);
+BENCHMARK_SHA256(sha256_openssl_oneshot);
 BENCHMARK_SHA256(sha256_openssl);
 #ifdef USE_NSS
 BENCHMARK_SHA256(sha256_libnss);
