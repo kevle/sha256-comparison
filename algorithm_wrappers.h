@@ -9,8 +9,10 @@
 // zedwood
 #include "zedwood/sha256.h"
 
+#ifdef BITCOIN_IMPL
 // bitcoin
 #include "bitcoin/sha256.h"
+#endif
 
 // OpenSSL
 #include <openssl/evp.h>
@@ -33,14 +35,14 @@
 #endif
 
 struct sha256_dummy {
-  void add_bytes(unsigned char *bytes, std::size_t num) {}
+  void add_bytes(const unsigned char *, std::size_t) {}
   std::array<unsigned char, 32> digest() { return {}; }
 };
 
 struct sha256_zedwood {
   zedwood::SHA256 ctx;
   sha256_zedwood() { ctx.init(); }
-  inline void add_bytes(unsigned char *bytes, std::size_t num) {
+  inline void add_bytes(const unsigned char *bytes, std::size_t num) {
     constexpr std::size_t max_bytes =
         (std::numeric_limits<unsigned int>::max)() / 2;
     unsigned int size = 0;
@@ -59,7 +61,7 @@ struct sha256_zedwood {
 struct sha256_openssl_deprecated {
   SHA256_CTX ctx = {};
   sha256_openssl_deprecated() { SHA256_Init(&ctx); }
-  void add_bytes(unsigned char *bytes, std::size_t num) {
+  void add_bytes(const unsigned char *bytes, std::size_t num) {
     static_assert((std::numeric_limits<size_t>::max)() ==
                       (std::numeric_limits<std::size_t>::max)(),
                   "Incompatible size_t");
@@ -84,7 +86,7 @@ struct sha256_openssl {
     EVP_DigestInit_ex(ctx.get(), md, NULL);
   }
 
-  void add_bytes(unsigned char *bytes, std::size_t num) {
+  void add_bytes(const unsigned char *bytes, std::size_t num) {
     static_assert((std::numeric_limits<size_t>::max)() ==
                       (std::numeric_limits<std::size_t>::max)(),
                   "Incompatible size_t");
@@ -113,7 +115,7 @@ struct sha256_libnss {
     assert(static_cast<bool>(ctx));
   }
 
-  void add_bytes(unsigned char *bytes, std::size_t num) {
+  void add_bytes(const unsigned char *bytes, std::size_t num) {
     constexpr std::size_t max_bytes =
         (std::numeric_limits<unsigned int>::max)();
     unsigned int size = 0;
@@ -154,39 +156,44 @@ struct sha256_bcrypt {
       BCRYPT_ALG_HANDLE handle;
       auto ret = BCryptOpenAlgorithmProvider(&handle, BCRYPT_SHA256_ALGORITHM,
                                              NULL, 0);
+      (void)ret;
       assert(ret == STATUS_SUCCESS);
       alg.reset(handle);
     }
     {
       BCRYPT_HASH_HANDLE handle;
       auto ret = BCryptCreateHash(alg.get(), &handle, NULL, 0, NULL, 0, 0);
+      (void)ret;
       assert(ret == STATUS_SUCCESS);
       ctx.reset(handle);
     }
   }
 
-  void add_bytes(unsigned char *bytes, std::size_t num) {
+  void add_bytes(const unsigned char *bytes, std::size_t num) {
     constexpr std::size_t max_bytes = (std::numeric_limits<ULONG>::max)();
     unsigned int size = 0;
     for (std::size_t i = 0; i < num; i += size, bytes += size) {
       size = static_cast<ULONG>((std::min)(max_bytes, num - i));
-      auto ret = BCryptHashData(ctx.get(), bytes, size, 0);
+      auto ret = BCryptHashData(ctx.get(), const_cast<unsigned char*>(bytes), size, 0);
+      (void)ret;
       assert(ret == STATUS_SUCCESS);
     }
   }
   std::array<unsigned char, 32> digest() {
     std::array<unsigned char, 32> tmp;
     auto ret = BCryptFinishHash(ctx.get(), tmp.data(), tmp.size(), 0);
+    (void)ret;
     assert(ret == STATUS_SUCCESS);
     return tmp;
   }
 };
 #endif
 
+#ifdef BITCOIN_IMPL
 struct sha256_bitcoin {
   CSHA256 ctx;
 
-  void add_bytes(unsigned char *bytes, std::size_t num) {
+  void add_bytes(const unsigned char *bytes, std::size_t num) {
     ctx.Write(bytes, num);
   }
   std::array<unsigned char, 32> digest() {
@@ -195,3 +202,4 @@ struct sha256_bitcoin {
     return tmp;
   }
 };
+#endif

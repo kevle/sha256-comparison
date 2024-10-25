@@ -583,7 +583,7 @@ bool AVXEnabled()
 } // namespace
 
 
-int SHA256AutoDetect(sha256_implementation::UseImplementation use_implementation)
+int SHA256AutoDetect(sha256_implementation::UseImplementation)
 {
     Transform = sha256::Transform;
     TransformD64 = sha256::TransformD64;

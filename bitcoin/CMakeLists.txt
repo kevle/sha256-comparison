@@ -11,3 +11,4 @@ set(bitcoin_headers
 )
 add_library(bitcoin STATIC ${bitcoin_src} ${bitcoin_headers})
 target_compile_definitions(bitcoin PRIVATE -DENABLE_X86_SHANI -DENABLE_SSE41 -DENABLE_AVX2 -DUSE_ASM)
+target_compile_definitions(bitcoin PUBLIC -DBITCOIN_IMPL)

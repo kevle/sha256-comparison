@@ -10,15 +10,19 @@ find_package(Catch2 CONFIG REQUIRED)
 #     pkg_check_modules(NSS REQUIRED nss-softokn nss-util nss) #
 # endif()
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
-add_compile_options(-mssse3 -msse4.1 -msse4.2 -mavx -mavx2 -msha)
-
-add_subdirectory(bitcoin)
-add_subdirectory(zedwood)
+add_compile_options(-mssse3 -msse4.1 -msse4.2 -mavx -mavx2 -msha -Wall -Wextra -pedantic -Wno-deprecated-declarations)
 
 add_library(all_algorithms INTERFACE)
-target_link_libraries(all_algorithms INTERFACE OpenSSL::SSL OpenSSL::Crypto bitcoin zedwood)
+
+add_subdirectory(bitcoin)
+target_link_libraries(all_algorithms INTERFACE bitcoin)
+add_subdirectory(zedwood)
+target_link_libraries(all_algorithms INTERFACE zedwood)
+
+target_link_libraries(all_algorithms INTERFACE OpenSSL::SSL OpenSSL::Crypto)
+
 # if(WIN32)
 #     target_link_libraries(main ${NSS_LIBRARIES})
 #     target_include_directories(main PUBLIC ${NSS_INCLUDE_DIRS})
