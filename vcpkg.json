@@ -7,5 +7,5 @@
         "openssl",
         "catch2"
     ],
-    "builtin-baseline": "ab231c2c666d2aa259a08e48e50dfeffb5c7fbe3"
+    "builtin-baseline": "e60236ee051183f1122066bee8c54a0b47c43a60"
 }

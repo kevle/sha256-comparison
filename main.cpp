@@ -59,7 +59,7 @@ public:
       benchmark::ClobberMemory();                                              \
     }                                                                          \
     state.SetBytesProcessed(int64_t(state.iterations()) *                      \
-                            int64_t(state.range(0)));                          \
+                            int64_t(state.range(0)) * state.threads());        \
   }                                                                            \
   BENCHMARK_REGISTER_F(data_fixture, BM_##SHA256_TYPE)                         \
       ->Range(1LL << 8, 1LL << 16)                                             \
