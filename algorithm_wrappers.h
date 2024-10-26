@@ -109,41 +109,6 @@ struct sha256_openssl_oneshot {
   }
 };
 
-#ifdef USE_NSS
-struct nss_destroyer {
-  void operator()(NSSLOWInitContext *ctx) const { NSSLOW_Shutdown(ctx); }
-  void operator()(NSSLOWHASHContext *ctx) const { NSSLOWHASH_Destroy(ctx); }
-};
-
-struct sha256_libnss {
-  std::unique_ptr<NSSLOWInitContext, nss_destroyer> ictx;
-  std::unique_ptr<NSSLOWHASHContext, nss_destroyer> ctx;
-  sha256_libnss()
-      : ictx(NSSLOW_Init()), //
-        ctx(NSSLOWHASH_NewContext(ictx.get(), HASH_AlgSHA256)) {
-    assert(static_cast<bool>(ictx));
-    assert(static_cast<bool>(ctx));
-  }
-
-  void add_bytes(const unsigned char *bytes, std::size_t num) {
-    constexpr std::size_t max_bytes =
-        (std::numeric_limits<unsigned int>::max)();
-    unsigned int size = 0;
-    for (std::size_t i = 0; i < num; i += size, bytes += size) {
-      size = static_cast<unsigned int>((std::min)(max_bytes, num - i));
-      NSSLOWHASH_Update(ctx.get(), bytes, size);
-    }
-  }
-  std::array<unsigned char, 32> digest() {
-    std::array<unsigned char, 32> tmp;
-    unsigned int ret = 0;
-    NSSLOWHASH_End(ctx.get(), tmp.data(), &ret, 32);
-    assert(ret == 32);
-    return tmp;
-  }
-};
-#endif
-
 #ifdef _WIN32
 struct bcrypt_alg_destroyer {
   void operator()(BCRYPT_ALG_HANDLE ctx) const {

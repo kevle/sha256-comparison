@@ -5,11 +5,7 @@
     "dependencies": [
         "benchmark",
         "openssl",
-        "catch2",
-        {
-            "name": "nss",
-            "platform": "windows"
-        }
+        "catch2"
     ],
     "builtin-baseline": "ab231c2c666d2aa259a08e48e50dfeffb5c7fbe3"
 }
