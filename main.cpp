@@ -22,6 +22,7 @@ public:
 
   void SetUp(::benchmark::State &state) {
     if (state.thread_index() == 0) {
+      global_md.reset(EVP_MD_fetch(NULL, "SHA256", NULL));
 #ifdef BITCOIN_IMPL
       if constexpr (std::is_same_v<sha256_wrapper, sha256_bitcoin>) {
         SHA256AutoDetect(sha256_implementation::USE_ALL);
@@ -74,6 +75,7 @@ BENCHMARK_SHA256(sha256_bitcoin);
 #endif // BITCOIN_IMPL
 BENCHMARK_SHA256(sha256_openssl_deprecated);
 BENCHMARK_SHA256(sha256_openssl_oneshot);
+BENCHMARK_SHA256(sha256_openssl_global);
 BENCHMARK_SHA256(sha256_openssl);
 #ifdef USE_NSS
 BENCHMARK_SHA256(sha256_libnss);

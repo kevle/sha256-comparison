@@ -78,12 +78,40 @@ struct openssl_evp_destroyer {
   void operator()(EVP_MD_CTX *ctx) const { EVP_MD_CTX_destroy(ctx); }
 };
 
+struct openssl_md_destroyer {
+  void operator()(EVP_MD *md) const { EVP_MD_free(md); }
+};
+
 struct sha256_openssl {
   std::unique_ptr<EVP_MD_CTX, openssl_evp_destroyer> ctx;
-  sha256_openssl() : ctx(EVP_MD_CTX_create()) {
+  const std::unique_ptr<EVP_MD, openssl_md_destroyer> md;
+
+  sha256_openssl() : ctx(EVP_MD_CTX_create()), md(EVP_MD_fetch(NULL, "SHA256", NULL)) {
     assert(static_cast<bool>(ctx));
-    const EVP_MD *md = EVP_MD_fetch(NULL, "SHA256", NULL);
-    EVP_DigestInit_ex(ctx.get(), md, NULL);
+    EVP_DigestInit_ex(ctx.get(), md.get(), NULL);
+  }
+
+  void add_bytes(const unsigned char *bytes, std::size_t num) {
+    static_assert((std::numeric_limits<size_t>::max)() ==
+                      (std::numeric_limits<std::size_t>::max)(),
+                  "Incompatible size_t");
+    EVP_DigestUpdate(ctx.get(), bytes, num);
+  }
+  std::array<unsigned char, 32> digest() {
+    std::array<unsigned char, 32> tmp;
+    EVP_DigestFinal_ex(ctx.get(), tmp.data(), nullptr);
+    return tmp;
+  }
+};
+
+static std::unique_ptr<EVP_MD, openssl_md_destroyer> global_md;
+
+struct sha256_openssl_global {
+  std::unique_ptr<EVP_MD_CTX, openssl_evp_destroyer> ctx;
+
+  sha256_openssl_global() : ctx(EVP_MD_CTX_create()) {
+    assert(static_cast<bool>(ctx));
+    EVP_DigestInit_ex(ctx.get(), global_md.get(), NULL);
   }
 
   void add_bytes(const unsigned char *bytes, std::size_t num) {
