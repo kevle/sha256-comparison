@@ -5,10 +5,9 @@ project(sha256-comparison)
 find_package(benchmark REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(Catch2 CONFIG REQUIRED)
-# if(WIN32)
-#     find_package(PkgConfig REQUIRED)
-#     pkg_check_modules(NSS REQUIRED nss-softokn nss-util nss) #
-# endif()
+
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(HWLOC REQUIRED IMPORTED_TARGET hwloc)
 
 set(CMAKE_CXX_STANDARD 20)
 
@@ -23,18 +22,13 @@ target_link_libraries(all_algorithms INTERFACE zedwood)
 
 target_link_libraries(all_algorithms INTERFACE OpenSSL::SSL OpenSSL::Crypto)
 
-# if(WIN32)
-#     target_link_libraries(main ${NSS_LIBRARIES})
-#     target_include_directories(main PUBLIC ${NSS_INCLUDE_DIRS})
-#     target_compile_options(main PUBLIC ${NSS_CFLAGS_OTHER})
-# endif()
-
 set(main_src 
     "main.cpp"
 )
 add_executable(main ${main_src})
 target_link_libraries(main all_algorithms)
 target_link_libraries(main benchmark::benchmark benchmark::benchmark_main)
+target_link_libraries(main PkgConfig::HWLOC)
 
 set(test_src 
     "test.cpp"
