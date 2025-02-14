@@ -177,8 +177,6 @@ struct sha256_bcrypt
   std::unique_ptr<void, bcrypt_alg_destroyer> alg;
   std::unique_ptr<void, bcrypt_hash_destroyer> ctx;
 
-  std::array<unsigned char, 32> sha256_memory;
-
   sha256_bcrypt()
   {
     {
